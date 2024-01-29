@@ -27,7 +27,7 @@ session_start();
         <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
             <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="./index.php">Home</a>
+            <a class="nav-link active" aria-current="page" href="./index.php">Users</a>
             </li>
             <li class="nav-item">
             <a class="nav-link" href="./form.php">Add User</a>
@@ -37,7 +37,8 @@ session_start();
         </div>
     </div>
     </nav>
-    <?php 
+    <?php
+            
         $nameErr = $emailErr = $genderErr = "";
         $name = $email = $gender = $agree = "";
         $error = false;
@@ -47,8 +48,54 @@ session_start();
             $update = true;
             $name = $_GET["name"];
             $email = $_GET["email"];
-
+            $gender = $_GET["gender"];
+            $agree = $_GET["reciveMail"];
+            $_SESSION["userID"] = $_GET["userId"];
+            $_SESSION["update"] = 1;
         }
+
+        // html Variables
+
+        // gender check when updating
+        $female_checked = $male_checked = "";
+        if(isset($_GET["gender"])) {
+            if($gender == "F" && $update) {
+                $female_checked = "checked";
+            }
+            else if($gender == "M" && $update) {
+                $male_checked = "checked";
+
+            }
+            else {
+                $female_checked = "checked";
+            }
+        }
+            
+        // receieveMail checked
+        $recieve_mail_checked = "";
+        if(isset($_GET["reciveMail"])) {
+            if($agree == 1 && $update) {
+                $recieve_mail_checked =  "checked";
+            }
+        }
+
+        // email placeholder
+        $email_placeholder = "";
+        if(isset($_SESSION["email"]) && !$update) 
+            $email_placeholder =  htmlspecialchars($_SESSION["email"]);
+        else if($update) {
+            $email_placeholder = htmlspecialchars($email);
+        }
+
+        // username placeholder
+        $username_placeholder = "";
+        if(isset($_SESSION["username"]) && !$update) 
+            $username_placeholder =  htmlspecialchars($_SESSION["username"]);
+        else if($update) {
+            $username_placeholder = htmlspecialchars($name);
+        }
+
+        // get form input
         if(isset($_POST['sub']) && $_SERVER["REQUEST_METHOD"] == "POST") {
             include 'db.php';
             if(empty($_POST["name"])) {
@@ -83,13 +130,15 @@ session_start();
             else {
                 $agree = 1;
             }
+
             if(!$error) {
                 $sql = "";
-                if($update) {
+                if(isset($_SESSION["update"])) {
+                    // echo $_SESSION["update"];
                     $sql = "UPDATE users
                     SET username = \"$name\",email = \"$email\", 
                     gender = \"$gender\",mail_status = $agree
-                    WHERE id = " . $_GET["userId"] . ";";
+                    WHERE id = " . $_SESSION["userID"] .  ";";
                 }
                 else {
                     $sql = "INSERT INTO users (username, email, gender, mail_status) 
@@ -100,18 +149,11 @@ session_start();
                 if(! $ret) {
                 die("Connection failed: " . mysqli_connect_error());
                 }
+                
             }
-            
-
             mysqli_close($conn);
+            session_destroy();
 
-            function get_name_val() {
-                
-            }
-
-            function get_email_val() {
-                
-            }
         }
         
     ?>
@@ -121,11 +163,7 @@ session_start();
             <div class="mb-3">
                 <label for="name" class="form-label">Name</label>
                 <input value="<?php 
-                    if(isset($_SESSION["username"]) && !$update) 
-                        echo htmlspecialchars($_SESSION["username"]);
-                    else if($update) {
-                        echo htmlspecialchars($name);
-                    }
+                    echo $username_placeholder;
                  ?>"  type="text" class="form-control" name="name" id="name" placeholder="Name">
                 <span class="highlight">*<?php echo $nameErr ?></span>
             </div>
@@ -133,11 +171,7 @@ session_start();
             <div class="mb-3">
             <label for="email" class="form-label">Email address</label>
             <input value="<?php 
-                if(isset($_SESSION["username"]) && !$update) 
-                    echo htmlspecialchars($_SESSION["username"]);
-                else if($update) {
-                    echo htmlspecialchars($email);
-                }
+                echo $email_placeholder;
             ?>" type="email" class="form-control" name="email" id="email" aria-describedby="emailHelp" placeholder="Email">
             <span class="highlight">*<?php echo $emailErr ?></span>
             </div>
@@ -145,11 +179,7 @@ session_start();
             <div class="form-check col-5 d-inline-block">
                 <input class="form-check-input" type="radio" value="M" name="gender" id="male"
                 <?php 
-                    if(isset($_GET["gender"])) {
-                        if($_GET["gender"] == "M" && $update) {
-                            echo "checked";
-                        }
-                    }
+                    echo htmlspecialchars($male_checked);
                 ?>
                 >
                 <label class="form-check-label" for="male">
@@ -159,14 +189,7 @@ session_start();
             <div class="form-check col-5 d-inline-block">
                 <input class="form-check-input" type="radio" value="F" name="gender" id="female" 
                 <?php 
-                    if(isset($_GET["gender"])) {
-                        if($_GET["gender"] == "F" && $update) {
-                            echo "checked";
-                        }
-                    }
-                    else {
-                        echo "checked";
-                    }
+                     echo htmlspecialchars($female_checked);
                 ?>
                 >
                 <label class="form-check-label" for="female">
@@ -179,11 +202,7 @@ session_start();
             </label>
             <input class="form-check-input" type="checkbox" value="" name="agree" id="agree" 
                     <?php 
-                        if(isset($_GET["reciveMail"])) {
-                            if($_GET["reciveMail"] == 1 && $update) {
-                                echo "checked";
-                            }
-                    }
+                        echo $recieve_mail_checked;
                     ?>
             >
         </div>
