@@ -22,9 +22,6 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     else {
         $password = $_POST["password"];
-        echo "HERE GOES PASSWORD<br>";
-        echo "$password";
-        echo "PASSOWRD ABOOOOOOOVE";
     }
 
     if(! $error) {
@@ -58,9 +55,8 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
                 print("Connection failed: " . mysqli_connect_error());
 
             }
-
-            header("Location:login.php");
             mysqli_close($conn);
+            header("Location:login.php");
         }
 
 }
